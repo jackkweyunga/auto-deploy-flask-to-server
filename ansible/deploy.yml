@@ -1,0 +1,12 @@
+---
+- hosts: webservers
+  
+  # an encrypted ansible secret file containing the sudo password
+  vars_files:
+    - secret
+  
+  roles:
+    - services
+
+  environment:
+    DEBUG: "{{ lookup('ansible.builtin.env', 'DEBUG') }}"

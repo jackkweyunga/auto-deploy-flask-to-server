@@ -1,0 +1,69 @@
+name: ansible-deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      REMOTE_USER:
+        type: string
+        description: 'Remote User'
+        required: true
+        default: 'ubuntu'
+      HOME_DIR:
+        type: string
+        description: 'Home Directory'
+        required: true
+        default: '/home/ubuntu'
+      TARGET_HOST:
+        description: 'Target Host'
+        required: true
+        default: "example.com" # Change this to your server IP or Domain
+
+jobs:
+   ansible:
+    runs-on: ubuntu-latest
+    env:
+      DEBUG: 0
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Add SSH Keys
+        run: |
+          cat << EOF > ansible/devops-key
+          ${{ secrets.SSH_DEVOPS_KEY_PRIVATE }}
+          EOF
+
+      - name: Update devops private key permissions
+        run: |
+          chmod 400 ansible/devops-key
+
+      - name: Install Ansible
+        run: |
+          pip install ansible
+
+      - name: Adding or Override Ansible inventory File
+        run: |
+          cat << EOF > ansible/inventory.ini
+          [webservers]
+          ${{ inputs.TARGET_HOST }}
+          EOF
+
+      - name: Adding or Override Ansible Config File
+        run: |
+          cat << EOF > ./ansible/ansible.cfg
+          [defaults]
+          ansible_python_interpreter='/usr/bin/python3'
+          deprecation_warnings=False
+          inventory=./inventory.ini
+          remote_tmp="${{ inputs.HOME_DIR }}/.ansible/tmp"
+          remote_user="${{ inputs.REMOTE_USER }}"
+          host_key_checking=False
+          private_key_file = ./devops-key
+          retries=2
+          EOF
+
+      - name: Run deploy playbook
+        run: |
+          sh ansible/create-sudo-password-ansible-secret.sh ${{ secrets.SUDO_PASSWORD }}
+          ANSIBLE_CONFIG=ansible/ansible.cfg ansible-playbook ansible/deploy.yml --vault-password-file=ansible/vault.txt

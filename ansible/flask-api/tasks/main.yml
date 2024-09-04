@@ -1,0 +1,30 @@
+# main task
+- name: Deploy app
+  become: true
+  block:
+
+    - name: Create a directory if it does not exist
+      ansible.builtin.file:
+        path: "{{ lookup('ansible.builtin.env', 'HOME_DIR') }}/{{ lookup('ansible.builtin.env', 'PROJECT_DIR') }}/.flask-app"
+        state: directory
+
+    - name: Copy compose file to server
+      ansible.builtin.copy:
+        src: "files/"
+        dest: "{{ lookup('ansible.builtin.env', 'HOME_DIR') }}/{{ lookup('ansible.builtin.env', 'PROJECT_DIR') }}/.flask-app/"
+    
+    # Uncomment this when working with private repositories
+    # Make sure the environment variables; DOCKER_TOKEN and DOCKER_USERNAME are provided
+    # 
+    # - name: Login to Docker via vars/main.yaml
+    #  shell: "echo \"{{ lookup('ansible.builtin.env', 'DOCKER_TOKEN') }}\" | docker login ghcr.io -u {{ lookup('ansible.builtin.env', 'DOCKER_USERNAME') }} --password-stdin"
+    
+    - name: Docker Compose Up
+      community.docker.docker_compose_v2:
+        project_src: "{{ lookup('ansible.builtin.env', 'HOME_DIR') }}/{{ lookup('ansible.builtin.env', 'PROJECT_DIR') }}/.flask-app"
+        pull: "always"
+      register: output
+
+    - name: Debug output
+      ansible.builtin.debug:
+        var: output

@@ -1,0 +1,54 @@
+
+volumes:
+    portainer-data:
+
+services:
+
+  portainer:
+    image: portainer/portainer-ce:alpine
+    container_name: portainer
+    command: -H unix:///var/run/docker.sock
+    ports:
+      - "9000:9000"
+    volumes:
+      # Connect docker socket to portainer
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      # Persist portainer data
+      - "portainer_data:/data"
+    restart: always
+
+  watchtower:
+    container_name: "watchtower"
+    image: "docker.io/containrrr/watchtower"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      # To enable docker authentication, uncomment the line below.
+      # You also need to make sure you are logged in to docker in the server
+      # E.g by running: sudo docker login ghcr.io
+      # - /root/.docker/config.json:/config.json:ro
+    restart: always
+    environment:
+      TZ: Africa/Dar_es_Salaam
+      WATCHTOWER_LIFECYCLE_HOOKS: "1" # Enable pre/post-update scripts
+    command: --debug --cleanup --interval 30
+
+  web:
+    image: ghcr.io/jackkweyunga/auto-deploy-flask-to-server:main
+    environment:
+      - FLASK_ENV=production
+      - DEBUG=${DEBUG}
+    ports:
+      - "5000:5000"
+    restart: always
+    
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    
+    deploy:
+      resources:
+        limits:
+          memory: "256m"
+          cpus: "0.50"
