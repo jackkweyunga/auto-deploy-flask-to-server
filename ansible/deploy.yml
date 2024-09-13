@@ -10,3 +10,6 @@
 
   environment:
     DEBUG: "{{ lookup('ansible.builtin.env', 'DEBUG') }}"
+    # Added new variables
+    FLASK_API_DOMAIN: "{{ lookup('ansible.builtin.env', 'FLASK_API_DOMAIN') }}"
+    PORTAINER_DOMAIN: "{{ lookup('ansible.builtin.env', 'PORTAINER_DOMAIN') }}"

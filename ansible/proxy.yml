@@ -1,0 +1,12 @@
+---
+- hosts: webservers
+
+  vars_files:
+    - secret
+
+  roles:
+    - traefik
+
+  vars:
+  
+    EMAIL: "{{ lookup('ansible.builtin.env', 'EMAIL') }}"

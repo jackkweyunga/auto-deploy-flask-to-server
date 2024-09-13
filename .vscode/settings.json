@@ -1,5 +1,6 @@
 {
     "yaml.schemas": {
-        "https://raw.githubusercontent.com/ansible/ansible-lint/main/src/ansiblelint/schemas/ansible.json#/$defs/playbook": "file:///home/zalongwa/.jack/auto-deploy-flask-to-server/ansible/deploy.yml"
+        "https://raw.githubusercontent.com/ansible/ansible-lint/main/src/ansiblelint/schemas/ansible.json#/$defs/playbook": "file:///home/zalongwa/.jack/auto-deploy-flask-to-server/ansible/deploy.yml",
+        "https://json.schemastore.org/github-workflow.json": "file:///home/zalongwa/.jack/auto-deploy-flask-to-server/.github/workflows/deploy.yml"
     }
 }

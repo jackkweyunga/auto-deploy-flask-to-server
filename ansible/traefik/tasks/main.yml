@@ -1,0 +1,77 @@
+---
+
+- name: Preparing required files and Directories in /etc/traefik
+  become: true
+  block:
+
+    - name: Create directory
+      file:
+        path: /etc/traefik
+        state: directory
+
+    - name: Create directory2
+      file:
+        path: /etc/traefik/certs
+        state: directory
+
+    - name: Copy config file
+      ansible.builtin.template:
+        src: templates/traefik.yml.jinja2
+        dest: /etc/traefik/traefik.yaml
+
+- name: Configuring traefik
+  become: true
+  block:
+      
+    - name: Create ssl-certs Volume
+      community.docker.docker_volume:
+        name: traefik-ssl-certs
+
+      register: v_output
+      ignore_errors: true
+
+    - name: Debug output
+      ansible.builtin.debug:
+        var: v_output
+
+    - block:
+      - name: Create traefik_network
+        become: true
+        community.docker.docker_network:
+          name: traefik_network
+        register: n_output
+        ignore_errors: true
+
+      - name: Debug output
+        ansible.builtin.debug:
+          var: n_output
+
+      when: v_output
+
+    - block:
+ 
+      - name: Deploy Traefik
+        community.docker.docker_container:
+          name: traefik
+          image: "traefik:v2.10"
+          ports:
+            - "80:80"
+            - "443:443"
+            - "59808:8080"
+          volumes:
+            - /var/run/docker.sock:/var/run/docker.sock
+            - traefik-ssl-certs:/ssl-certs
+            - /etc/traefik:/etc/traefik
+          networks:
+            - name: "traefik_network" # required. Name of the network to operate on.
+          restart_policy: always
+          labels:
+            com.centurylinklabs.watchtower.enable: "false"
+        register: d_output
+        ignore_errors: true
+
+      - name: Debug output
+        ansible.builtin.debug:
+          var: d_output
+
+      when: n_output
